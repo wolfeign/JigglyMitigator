@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml" style="height: 100%;">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="author" content="Wolfeign">
+    <meta name="description" content="手書きの手ブレを軽減するJavaScript。A script that reduces the slight shaking of handwriting.">
+
+    <title>Jiggly Mitigator Ver.1.00</title>
+</head>
+
+<body style="position: fixed; left: 0; top: 0; width: 100%; height: 100%; margin: 0;">
+    <svg id="svg" style="width: 100%; height: 100%; cursor: crosshair;"></svg>
+
+    <script>
+        // ポリラインの長さの閾値 (18という閾値は適当なので調整が必要かも)
+        // Polyline length threshold (The threshold of 18 needs adjustment.)
+        const POLYLINE_LENGTH_THRESHOLD = 18;
+
+        const svg = document.getElementById("svg");
+        const coordinates = [];
+        let object = null;
+
+        window.onmousedown = (event) => {
+            if (0 === event.button)
+                onStart(event.layerX, event.layerY);
+        }
+
+        window.onmousemove = (event) => {
+            if (event.buttons & 1)
+                onMove(event.layerX, event.layerY);
+        }
+
+        // タッチ入力が開始されたとき
+        // When touch input is started
+        window.ontouchstart = (event) => {
+            onStart(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
+        };
+
+        // タッチ入力中
+        // During touch input
+        window.ontouchmove = (event) => {
+            onMove(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
+        };
+
+        onStart = (x, y) => {
+            coordinates.length = 0;
+            coordinates.push({
+                x: x,
+                y: y
+            });
+
+            object = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            object.setAttribute("stroke", "#60cfff");
+            object.setAttribute("stroke-width", 3);
+            object.setAttribute("stroke-linecap", "round");
+            object.setAttribute("stroke-linejoin", "round");
+            object.setAttribute("fill", "none");
+
+            object.setAttribute("d", getJigglyMitigatedPath(coordinates, POLYLINE_LENGTH_THRESHOLD));
+
+            svg.appendChild(object);
+        }
+
+        onMove = (x, y) => {
+            coordinates.push({
+                x: x,
+                y: y
+            });
+
+            object.setAttribute("d", getJigglyMitigatedPath(coordinates, POLYLINE_LENGTH_THRESHOLD));
+        }
+
+        // 手ブレを軽減させたポリラインのpathを得る (verticesはxとyをメンバに持つオブジェクトの配列)
+        // Get the path of the polyline with reduced slight shaking. (vertices is an array of objects with x and y as members)
+        function getJigglyMitigatedPath(vertices, threshold) {
+            if (0 === vertices.length)
+                return "";
+
+            let d = `M${vertices[0].x},${vertices[0].y}`;
+
+            // 未処理の手ブレありライン
+            // Normal slight shaking line.
+            //for (let i = 0; i < vertices.length; i++) {
+            //    d += ` L${vertices[i].x},${vertices[i].y}`;
+            //}
+
+            // 手ブレなしライン
+            // Line without slight shaking.
+            const cubics = catmullRom2bezier(toSimple(vertices, threshold));
+            for (let i = 0; i < cubics.length; i++) {
+                for (let j = 0; j < 6; j++) {
+                    cubics[i][j] = parseFloat(cubics[i][j].toFixed(3));
+                }
+
+                d += ` C${cubics[i][0]},${cubics[i][1]} ${cubics[i][2]},${cubics[i][3]} ${cubics[i][4]},${cubics[i][5]}`;
+            }
+
+            return d;
+        }
+
+        // 3次ベジエ曲線の頂点を得る
+        // Get the vertices of the cubic Bezier curve.
+        // 参考URL(Reference URL) : https://qiita.com/kwst/items/16e4877890a19826ba7f
+        function catmullRom2bezier(pts) {
+            const cubics = [];
+            for (let i = 0, iLen = pts.length; i < iLen; i++) {
+                let p = [
+                    pts[i - 1],
+                    pts[i],
+                    pts[i + 1],
+                    pts[i + 2]
+                ];
+                if (i === 0) {
+                    p[0] = {
+                        x: pts[0].x,
+                        y: pts[0].y
+                    };
+                }
+                if (i === iLen - 2) {
+                    p[3] = {
+                        x: pts[iLen - 2].x,
+                        y: pts[iLen - 2].y
+                    };
+                }
+                if (i === iLen - 1) {
+                    p[2] = {
+                        x: pts[iLen - 1].x,
+                        y: pts[iLen - 1].y
+                    };
+                    p[3] = {
+                        x: pts[iLen - 1].x,
+                        y: pts[iLen - 1].y
+                    };
+                }
+                const val = 6;
+                cubics.push([
+                    (-p[0].x + val * p[1].x + p[2].x) / val,
+                    (-p[0].y + val * p[1].y + p[2].y) / val,
+                    (p[1].x + val * p[2].x - p[3].x) / val,
+                    (p[1].y + val * p[2].y - p[3].y) / val,
+                    p[2].x,
+                    p[2].y
+                ]);
+            }
+            return cubics;
+        }
+
+        // ポリラインを単純化
+        // Simplify polyline.
+        function toSimple(points, threshold) {
+            const simple = [];
+            const length = points.length;
+
+            if (0 !== length)
+                simple.push(points[0]);
+
+            let totalLength = 0;
+            for (let i = 1; i < length - 1; i++) {
+                totalLength += Math.sqrt((points[i - 1].x - points[i].x) * (points[i - 1].x - points[i].x) + (points[i - 1].y - points[i].y) * (points[i - 1].y - points[i].y));
+
+                if (totalLength >= threshold) {
+                    totalLength = 0;
+                    simple.push(points[i]);
+                }
+            }
+
+            if (length >= 2)
+                simple.push(points[length - 1]);
+
+            return simple;
+        }
+    </script>
+</body>
+</html>
