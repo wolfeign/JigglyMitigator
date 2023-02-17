@@ -1,33 +1,33 @@
-# Jiggly Mitigator
+ï»¿# Jiggly Mitigator
 
-è‘‚«“ü—Í‚ÌèƒuƒŒ‚ğŒyŒ¸‚·‚éJavaScriptƒvƒƒOƒ‰ƒ€B
+æ‰‹æ›¸ãå…¥åŠ›æ™‚ã®æ‰‹ãƒ–ãƒ¬ã‚’è»½æ¸›ã™ã‚‹JavaScriptãƒ—ãƒ­ã‚°ãƒ©ãƒ ã€‚
 
 JavaScript program to reduce the slight shaking at the time of handwriting input.
 
-### ƒfƒ‚ (Demo)
+### ãƒ‡ãƒ¢ (Demo)
 
 https://wolfeign.github.io/JigglyMitigator/
 
-### g—p•û–@ (Usage)
+### ä½¿ç”¨æ–¹æ³• (Usage)
 
-ƒ}ƒEƒX‚Åü‚ğ•`‚­B
-F‚âü‚Ì‘¾‚³‚à•ÏX‰Â”\B
-èƒuƒŒ‚ğŒyŒ¸‚µ‚Ä‚È‚¢‚Æ‚«‚É‚Ç‚¤‚È‚é‚©‚ğŠm”F‚·‚é‚½‚ßAŠŠ‚ç‚©‚³‚Ìƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚ğ“±“üB
+ãƒã‚¦ã‚¹ã§ç·šã‚’æãã€‚
+è‰²ã‚„ç·šã®å¤ªã•ã‚‚å¤‰æ›´å¯èƒ½ã€‚
+æ‰‹ãƒ–ãƒ¬ã‚’è»½æ¸›ã—ã¦ãªã„ã¨ãã«ã©ã†ãªã‚‹ã‹ã‚’ç¢ºèªã™ã‚‹ãŸã‚ã€æ»‘ã‚‰ã‹ã•ã®ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã‚’å°å…¥ã€‚
 
 Draw a line with the mouse.
 You can also change the color and line thickness.
 Introduced a smoothness checkbox to see what happens when you don't have shake reduction.
 
-### Šù’m‚Ì–â‘è (Known Issues)
+### æ—¢çŸ¥ã®å•é¡Œ (Known Issues)
 
-¡‚Ì‚Æ‚±‚ë‚È‚µ
+ä»Šã®ã¨ã“ã‚ãªã—
 
 None for now.
 
-### ìÒ (Author)
+### ä½œè€… (Author)
 
 Wolfeign(@wolfeign)
 
-### ƒ‰ƒCƒZƒ“ƒX (License)
+### ãƒ©ã‚¤ã‚»ãƒ³ã‚¹ (License)
 
 The MIT License (MIT)
