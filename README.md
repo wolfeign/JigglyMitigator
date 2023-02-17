@@ -1,35 +1,33 @@
 # Jiggly Mitigator
 
-æ‰‹æ›¸ãå…¥åŠ›æ™‚ã®æ‰‹ãƒ–ãƒ¬ã‚’è»½æ¸›ã™ã‚‹JavaScriptãƒ—ãƒ­ã‚°ãƒ©ãƒ ã€‚
+è‘‚«“ü—Í‚ÌèƒuƒŒ‚ğŒyŒ¸‚·‚éJavaScriptƒvƒƒOƒ‰ƒ€B
 
 JavaScript program to reduce the slight shaking at the time of handwriting input.
 
-### ãƒ‡ãƒ¢ (Demo)
+### ƒfƒ‚ (Demo)
 
 https://wolfeign.github.io/JigglyMitigator/
 
-### ä½¿ç”¨æ–¹æ³• (Usage)
+### g—p•û–@ (Usage)
 
-xã¨yã‚’ãƒ¡ãƒ³ãƒã«æŒã¤ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®é…åˆ—ã‚’getJigglyMitigatedPathã«æ¸¡ã™ã¨ãƒ‘ã‚¹ãŒå¾—ã‚‰ã‚Œã‚‹ã€‚
-ã“ã®ãƒ‘ã‚¹ã¯SVGã®då±æ€§ã¨åŒã˜ã‚‚ã®ãªã®ã§ãã®ã¾ã¾ä½¿ç”¨ã™ã‚‹ã“ã¨ãŒã§ãã‚‹ã€‚
+ƒ}ƒEƒX‚Åü‚ğ•`‚­B
+F‚âü‚Ì‘¾‚³‚à•ÏX‰Â”\B
+èƒuƒŒ‚ğŒyŒ¸‚µ‚Ä‚È‚¢‚Æ‚«‚É‚Ç‚¤‚È‚é‚©‚ğŠm”F‚·‚é‚½‚ßAŠŠ‚ç‚©‚³‚Ìƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚ğ“±“üB
 
-å¼•æ•°ã®thresholdã¯ç¾çŠ¶18ã¨ã—ã¦ã„ã‚‹ãŒã€å°ã•ãã™ã‚Œã°ç·šãŒã‚¬ã‚¯ã‚¬ã‚¯ã«ãªã‚‹ã€‚
+Draw a line with the mouse.
+You can also change the color and line thickness.
+Introduced a smoothness checkbox to see what happens when you don't have shake reduction.
 
-You can get the path by passing an array of objects with x and y as members to the getJigglyMitigatedPath function.
-This path is the same as the d attribute of SVG, so you can use it as it is.
+### Šù’m‚Ì–â‘è (Known Issues)
 
-The threshold of the argument is currently 18, but if it is made smaller, the line will become jerky.
+¡‚Ì‚Æ‚±‚ë‚È‚µ
 
-### æ—¢çŸ¥ã®å•é¡Œ (Known Issues)
+None for now.
 
-å°ã•ã„æ³¢ã‚’æãã¨ç·šãŒã‚°ãƒã‚°ãƒå‹•ãã€‚
-
-If you draw a small wave, the line will move.
-
-### ä½œè€… (Author)
+### ìÒ (Author)
 
 Wolfeign(@wolfeign)
 
-### ãƒ©ã‚¤ã‚»ãƒ³ã‚¹ (License)
+### ƒ‰ƒCƒZƒ“ƒX (License)
 
 The MIT License (MIT)
