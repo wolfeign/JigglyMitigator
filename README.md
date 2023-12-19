@@ -23,9 +23,9 @@ The third argument is optional (see below)
 The third argument is optional and can be specified as follows:
 (Each option will be explained later)
 
-new JigglyMitigator(x, y, {
+`new JigglyMitigator(x, y, {
 	strokeBufferSize: 10
-});
+});`
 
 頂点を追加するには、定義したmitigatorオブジェクトの appendToBuffer() を呼び出す
 
