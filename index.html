@@ -1,246 +1,45 @@
 ﻿<!DOCTYPE html>
-<html style="height: 100%;">
+<html lang="ja" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="author" content="Wolfeign">
-    <meta name="description" content="手書きの手ブレを軽減するJavaScript。A script that reduces the slight shaking of handwriting.">
 
-    <title>Jiggly Mitigator 1.01</title>
+    <link rel="stylesheet" type="text/css" href="demo.css" />
+
+    <script src="jiggly-mitigator.min.js"></script>
+
+    <title>Jiggly Mitigator</title>
 </head>
 
-<body style="width: 100%; height: 100%; margin: 0; ">
-    <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-        <div style="position: relative; width: 100%; margin: 6px 0; display: flex; flex-direction: row; align-items: center;">
-            <select id="color" title="色" style="margin: 0 8px;">
-                <option value="#2ca9e1" selected="selected">青</option>
-                <option value="#d9333f">赤</option>
-                <option value="#3eb370">緑</option>
-                <option value="#fcc800">黄色</option>
-                <option value="#884898">紫</option>
-                <option value="#b8d200">黄緑</option>
-                <option value="#f6bfbc">ピンク</option>
-                <option value="#f39800">オレンジ</option>
-                <option value="#a0d8ef">水色</option>
-                <option value="#8c6450">茶色</option>
-                <option value="#dcdddd">灰色</option>
-                <option value="#2b2b2b">黒</option>
-            </select>
-
-            <input type="range" id="width" min="1" max="200" value="1" title="線の太さ" style="width: 200px; margin-right: 8px;" />
-
-            <input type="checkbox" id="smooth" name="smooth" checked="checked" />
-            <label for="smooth" style="margin-right: 8px;">線をなめらかにする</label>
-
-            <input type="button" id="clear" value="クリア" />
-        </div>
-
-        <svg id="svg" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; cursor: crosshair;"></svg>
-    </div>
+<body>
+    <svg id="svg" class="svg"></svg>
 
     <script>
-        // 3次ベジエ曲線の頂点を得る
-        // Get the vertices of the cubic Bezier curve.
-        // 参考URL:https://qiita.com/kwst/items/16e4877890a19826ba7f
-        function catmullRom2bezier(pts) {
-            const cubics = [];
-            for (let i = 0, iLen = pts.length; i < iLen; i++) {
-                let p = [
-                    pts[i - 1],
-                    pts[i],
-                    pts[i + 1],
-                    pts[i + 2]
-                ];
-                if (i === 0) {
-                    p[0] = {
-                        x: pts[0].x,
-                        y: pts[0].y
-                    };
-                }
-                if (i === iLen - 2) {
-                    p[3] = {
-                        x: pts[iLen - 2].x,
-                        y: pts[iLen - 2].y
-                    };
-                }
-                if (i === iLen - 1) {
-                    p[2] = {
-                        x: pts[iLen - 1].x,
-                        y: pts[iLen - 1].y
-                    };
-                    p[3] = {
-                        x: pts[iLen - 1].x,
-                        y: pts[iLen - 1].y
-                    };
-                }
-                const val = 6;
-                cubics.push([
-                    (-p[0].x + val * p[1].x + p[2].x) / val,
-                    (-p[0].y + val * p[1].y + p[2].y) / val,
-                    (p[1].x + val * p[2].x - p[3].x) / val,
-                    (p[1].y + val * p[2].y - p[3].y) / val,
-                    p[2].x,
-                    p[2].y
-                ]);
-            }
-            return cubics;
-        }
-
-        // ポリラインを単純化
-        // Get simplify polylines.
-        function toSimplePolyline(points, width) {
-            const simple = [];
-
-            if (points.length >= 1)
-                simple.push(points[0]);
-
-            let distance = 0;
-            for (let i = 2; i < points.length - 1; i++) {
-                if (simple.length < 1) {
-                    simple.push(points[i]);
-                    continue;
-                }
-
-                const x1 = simple[simple.length - 1].x;
-                const y1 = simple[simple.length - 1].y;
-
-                const distance1 = getLinePointDistance(points[i].x, points[i].y, x1, y1, points[i + 1].x, points[i + 1].y);
-                if (distance1 >= 0.1) {
-                    if (simple.length < 2) {
-                        simple.push(points[i]);
-                        continue;
-                    }
-
-                    const x2 = simple[simple.length - 2].x;
-                    const y2 = simple[simple.length - 2].y;
-
-                    const distance2 = getLinePointDistance(points[i].x, points[i].y, x1, y1, x2, y2)
-                    if (distance2 >= 0.1) {
-                        // しきい値(数値はわりと適当、調整次第でもっと滑らかになるかも)
-                        // Threshold (Values are relatively appropriate, may be smoother depending on adjustment)
-                        let threshold = 30 - width / 2;
-                        if (threshold < 0)
-                            threshold = 0;
-
-                        distance += Math.sqrt((x1 - points[i].x) * (x1 - points[i].x) + (y1 - points[i].y) * (y1 - points[i].y));
-                        if (distance >= threshold) {
-                            distance = 0;
-                            simple.push(points[i]);
-                        }
-                    }
-                }
-            }
-
-            if (points.length >= 2)
-                simple.push(points[points.length - 1]);
-
-            return simple;
-        }
-
-        // 点と線の距離
-        // Get distance between point and line.
-        function getLinePointDistance(x, y, x1, y1, x2, y2) {
-            const sqrt = (y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1);
-
-            if (0 === sqrt)
-                return 0;
-
-            return Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / Math.sqrt(sqrt);
-        }
-
-        const svg = document.getElementById("svg");
-        const coordinates = [];
         let path = null;
-        let strokeWidth = 1;
-        let strokeColor = document.getElementById("color").value;
-        let smoothLine = true;
+        let mitigator = null;
 
-        function onMouseDown() {
-            path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("stroke", strokeColor);
-            path.setAttribute("stroke-width", strokeWidth);
-            path.setAttribute("stroke-linecap", "round");
-            path.setAttribute("stroke-linejoin", "round");
-            path.setAttribute("fill", "none");
-            svg.appendChild(path);
-
-            coordinates.length = 0;
-        }
-
-        function onMouseMove(x, y) {
-            coordinates.push({
-                x: x,
-                y: y
-            });
-
-            const cubics = smoothLine ? catmullRom2bezier(toSimplePolyline(coordinates, strokeWidth)) : catmullRom2bezier(coordinates);
-
-            let attribute = `M${coordinates[0].x},${coordinates[0].y}`;
-            for (let i = 0; i < cubics.length; i++) {
-                for (let j = 0; j < 6; j++) {
-                    cubics[i][j] = parseFloat(cubics[i][j].toFixed(3));
-                }
-
-                attribute += ` C${cubics[i][0]},${cubics[i][1]} ${cubics[i][2]},${cubics[i][3]} ${cubics[i][4]},${cubics[i][5]}`;
-            }
-
-            path.setAttribute("d", attribute);
-        }
-
-        document.getElementById("color").addEventListener("change", () => {
-            strokeColor = document.getElementById("color").value;
-        }, false);
-
-        document.getElementById("width").value = strokeWidth;
-        document.getElementById("width").addEventListener("input", () => {
-            strokeWidth = document.getElementById("width").value;
-        }, false);
-        document.getElementById("width").addEventListener("mousemove", () => {
-            document.getElementById("width").title = "線の太さ：" + strokeWidth + "px";
-        }, false);
-
-        document.getElementById("smooth").checked = smoothLine;
-        document.getElementById("smooth").addEventListener("input", () => {
-            smoothLine = document.getElementById("smooth").checked;
-        }, false);
-
-        document.getElementById("clear").addEventListener("click", () => {
-            for (; ;) {
-                const element = svg.getElementsByTagName("path");
-
-                if (0 === element.length)
-                    break;
-
-                element[0].remove();
-            }
-        }, false);
-
-        svg.addEventListener("mousedown", (event) => {
+        document.addEventListener("mousedown", (event) => {
             if (0 === event.button) {
-                onMouseDown();
-                onMouseMove(event.offsetX, event.offsetY);
+                mitigator = new JigglyMitigator(event.pageX, event.pageY, null);
+
+                path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("vector-effect", "non-scaling-stroke");
+                path.setAttribute("d", mitigator.getPath());
+                path.classList.add("path");
+                document.getElementById("svg").appendChild(path);
             }
         }, false);
 
-        svg.addEventListener("mousemove", (event) => {
-            if (event.buttons & 1)
-                onMouseMove(event.offsetX, event.offsetY);
+        document.addEventListener("mousemove", (event) => {
+            if (null !== mitigator && (event.buttons & 1)) {
+                mitigator.appendToBuffer(event.pageX, event.pageY);
+                path.setAttribute("d", mitigator.getPath());
+            } else
+                mitigator = null;
         }, false);
 
-        // タッチ入力が開始されたとき
-        // When touch input is started.
-        svg.addEventListener("touchstart", (event) => {
-            const rect = svg.getBoundingClientRect();
-
-            onMouseDown();
-            onMouseMove(event.changedTouches[0].pageX - rect.left, event.changedTouches[0].pageY - rect.top);
-        }, false);
-
-        // タッチ入力中
-        // During touch input.
-        svg.addEventListener("touchmove", (event) => {
-            const rect = svg.getBoundingClientRect();
-
-            onMouseMove(event.changedTouches[0].pageX - rect.left, event.changedTouches[0].pageY - rect.top);
+        document.addEventListener("mouseup", (event) => {
+            if (0 === event.button)
+                mitigator = null;
         }, false);
     </script>
 </body>
