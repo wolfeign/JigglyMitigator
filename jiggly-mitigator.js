@@ -24,7 +24,7 @@ class JigglyMitigator {
 
         // 平均を割り出す際、どれくらいまで頂点リストを遡るか (この値は座標の距離によって変化する)
         // How far back in the list of vertices to go when calculating the average (this value changes depending on the distance of the coordinates)
-        this.strokeBufferSize = 8;
+        this.strokeBufferSize = 6;
 
         // 予め2乗しておく
         // Square it in advance
