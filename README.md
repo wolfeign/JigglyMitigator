@@ -23,8 +23,8 @@ The third argument is optional (see below)
 The third argument is an optional option and can be specified as follows.
 (Each option will be explained later)
 
-`new JigglyMitigator(x, y, {  
-	fixedDigit: 0  
+`new JigglyMitigator(x, y, {
+	fixedDigit: 0
 });`
 
 頂点を追加するには、定義したmitigatorオブジェクトの appendToBuffer() を呼び出す。
