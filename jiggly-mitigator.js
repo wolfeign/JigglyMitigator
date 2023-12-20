@@ -10,11 +10,10 @@
 class JigglyMitigator {
     constructor(x, y, options = null) {
         this.options = {
-            strokeBufferSize: 8,
             lineDistanceThreshold: 0.15,
             longLineDistanceThreshold: 0.3,
             distanceThreshold: 10,
-            fixedDigit: 1
+            fixedDigit: 2
         };
         if (null !== options) {
             for (let key in options) {
@@ -22,6 +21,10 @@ class JigglyMitigator {
                     this.options[key] = options[key];
             }
         }
+
+        // 平均を割り出す際、どれくらいまで頂点リストを遡るか (この値は座標の距離によって変化する)
+        // How far back in the list of vertices to go when calculating the average (this value changes depending on the distance of the coordinates)
+        this.strokeBufferSize = 8;
 
         // 予め2乗しておく
         // Square it in advance
@@ -54,17 +57,51 @@ class JigglyMitigator {
         // 一時パス
         // Temporary path
         this.temporaryPath = "";
+
+        // 前回の座標と直近の距離リスト
+        // Previous coordinates and latest distance list
+        this.lastX = 0;
+        this.lastY = 0;
+        this.distance = [];
     }
 
     // 頂点を追加
     // Add vertex
     appendToBuffer(x, y) {
+        // 直近の距離の平均から strokeBufferSize を割り出す
+        // Calculate strokeBufferSize from the average of recent distances
+        if (0 === this.distance.length) {
+            this.lastX = x;
+            this.lastY = y;
+
+            this.distance.push(0);
+        } else {
+            const d = this.getDistance2(x, y, this.lastX, this.lastY);
+
+            this.distance.push(Math.sqrt(d));
+            if (this.distance.length > 20)
+                this.distance.shift();
+
+            let total = 0;
+            for (let i = 0; i < this.distance.length; i++) {
+                total += this.distance[i];
+            }
+            const avg = total / this.distance.length;
+
+            this.strokeBufferSize = 10 - Math.floor(avg);
+            if (this.strokeBufferSize < 6)
+                this.strokeBufferSize = 6;
+
+            this.lastX = x;
+            this.lastY = y;
+        }
+
         this.strokeBuffer.push({
             x: x,
             y: y
         });
 
-        while (this.strokeBuffer.length > this.options.strokeBufferSize) {
+        while (this.strokeBuffer.length > this.strokeBufferSize) {
             this.strokeBuffer.shift();
         }
 
@@ -75,7 +112,7 @@ class JigglyMitigator {
     // Get the average of the vertices
     getAveragePoint(offset) {
         const len = this.strokeBuffer.length;
-        if (len % 2 === 1 || len >= this.options.strokeBufferSize) {
+        if (len % 2 === 1 || len >= this.strokeBufferSize) {
             let totalX = 0;
             let totalY = 0;
             let count = 0;
